@@ -31,10 +31,10 @@ const protect = async (req, res, next) => {
     const decodedJwt = jwt.verify(token, process.env.JWT_AUTH_TOKEN);
 
     const userSql =
-      "select email,id,role,other_names,first_name from users where id=$1 ";
+      "select email,id,role,other_names,first_name,account_confirmed from users where id=$1 ";
     const result = await pool.query(userSql, [decodedJwt.id]);
 
-    if (result.rowCount <= 0)
+    if (result.rowCount < 1)
       return next(new ErrorResponse("Invalid user credentials", 403));
 
     if (!result.rows[0].account_confirmed)

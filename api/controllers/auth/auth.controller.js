@@ -22,10 +22,7 @@ const registerUser = async (req, res, next) => {
   //const { user } = req;
   const { email, first_name, other_names, role, created_at } = req.body;
   const emailVerified = false;
-  const password = await hashPassword(
-    `${first_name}${other_names}`.toLowerCase()
-  );
-
+  const password = await hashPassword(email);
   try {
     if (!checkProperties(req.body))
       return next(new ErrorResponse("Please fill in all fields", 400));
@@ -34,24 +31,13 @@ const registerUser = async (req, res, next) => {
       return next(new ErrorResponse("Please enter a valid email", 400));
 
     const confirmToken = confirmationToken(email);
-
-    const emailMsgConfig = {
-      to: email,
-      subject: "Printer Tracker Account Confirmation",
-      text: "Confirm your account",
-      html: emailConfirmationHtml(
-        // eslint-disable-next-line no-undef
-        `${process.env.CLIENT_URL}/confirmAccount/${confirmToken}`,
-        `${first_name}${other_names}`.toLowerCase(),
-        password
-      ),
-    };
-
-    sendMail(emailMsgConfig);
-
-    const result = await pool.query(
-      "insert into users(username,email,first_name,other_names,password,role,account_confirmed,created_by,created_at) values ($1,$1,$2,$3,$4,$5,$6,$7) returning * ",
+    const username =
+      `${first_name}${other_names}`.toLowerCase() +
+      Math.floor(Math.random() * 10000);
+    await pool.query(
+      "insert into users(username,email,first_name,other_names,password,role,account_confirmed,created_by,created_at) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning * ",
       [
+        username,
         email,
         first_name,
         other_names,
@@ -62,7 +48,24 @@ const registerUser = async (req, res, next) => {
         created_at,
       ]
     );
-    res.status(201).json({ success: true, data: result });
+    const emailMsgConfig = {
+      to: email,
+      subject: "Printer Tracker Account Confirmation",
+      text: "Confirm your account",
+      html: emailConfirmationHtml(
+        // eslint-disable-next-line no-undef
+        `${process.env.CLIENT_URL}/confirmAccount/${confirmToken}`,
+        {
+          username,
+          password: email,
+        }
+      ),
+    };
+
+    sendMail(emailMsgConfig);
+    res
+      .status(201)
+      .json({ success: true, message: "Successfully Registered User" });
   } catch (error) {
     next(error);
   }
@@ -164,18 +167,15 @@ const generateNewConfirmationToken = (req, res, next) => {
 const loginUser = async (req, res, next) => {
   sanitize(req.body);
   trimObject(req.body);
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    if (!email || !password)
+    if (!username || !password)
       return next(new ErrorResponse("Please fill in all fields", 400));
 
-    if (!validateEmail(email))
-      return next(new ErrorResponse("Please enter a valid email", 400));
-
     const result = await pool.query(
-      "select id,email,role,account_confirmed,password from users where email = $1",
-      [email]
+      "select id,username,role,account_confirmed,password from users where username = $1",
+      [username]
     );
 
     if (result.rowCount < 1)
@@ -201,10 +201,6 @@ const loginUser = async (req, res, next) => {
       userId: result.rows[0].id,
       role: result.rows[0].role_id,
     });
-    const logDetailsSql =
-      "insert into log_details(user_id,activity,created_at) values ($1,$2,$3)";
-
-    await pool.query(logDetailsSql, [result.rows[0].id, "login", new Date()]);
 
     res.status(200).json({
       success: true,

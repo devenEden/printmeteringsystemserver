@@ -1,3 +1,5 @@
+const ErrorResponse = require("../../utils/errors/errorResponse");
+
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   let error = {
@@ -7,6 +9,18 @@ const errorHandler = (err, req, res, next) => {
   console.log("====================================");
   console.log(error);
   console.log("====================================");
+
+  if (err.code === "23502")
+    error = new ErrorResponse(`Please fill in all fields`, 400);
+
+  if (err.code === "23505") {
+    const errDetailsArr = err.detail.split("(");
+    const fieldArray = errDetailsArr[2].split(")");
+    error = new ErrorResponse(
+      `${fieldArray[0]} already exists, please try another`,
+      409
+    );
+  }
 
   if (!error.statusCode) error.message = "Sorry internal server error occured";
 

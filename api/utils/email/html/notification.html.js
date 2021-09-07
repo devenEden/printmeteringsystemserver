@@ -1,5 +1,5 @@
 const notificationHtml = (message) => {
-  return `<style type="text/css">
+return `<style type="text/css">
   /**
        * Google webfonts. Recommended to include the .woff version for cross-client compatibility.
        */
@@ -103,7 +103,7 @@ const notificationHtml = (message) => {
   <!-- start preheader -->
   <div class="preheader"
     style="display: none; max-width: 0; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #fff; opacity: 0;">
-    Amani initiative fininance/administration manangement information system
+    Printer Tracker System
   </div>
   <!-- end preheader -->
 
@@ -142,7 +142,7 @@ const notificationHtml = (message) => {
             <td align="left" bgcolor="#ffffff"
               style="padding: 36px 24px 0; font-family: 'sans-serif', Helvetica, Arial, sans-serif; border-top: 3px solid #d4dadf;">
               <h1 style="margin: 0; font-size: 28px; font-weight: 700; ">
-                Amani Initiaitive Finance/Administration Management Information System</h1>
+                Printer Tracker System</h1>
             </td>
           </tr>
         </table>
@@ -169,8 +169,8 @@ const notificationHtml = (message) => {
           <tr>
             <td align="left" bgcolor="#ffffff"
               style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-              <p style="margin: 0;">Your are receiving this email because you have an account in the Amani Initiaitive
-                Finance/Administration Management Information System. If you didn't create an account Amani Intiative
+              <p style="margin: 0;">Your are receiving this email because you have an account in the Printer Tracker
+                System System. If you didn't create an account
                 you can safely delete this email.</p>
             </td>
           </tr>

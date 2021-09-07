@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
     let error = {
         ...err
@@ -6,6 +7,8 @@ const errorHandler = (err, req, res, next) => {
     console.log('====================================');
     console.log(error);
     console.log('====================================');
+
+    if (!error.statusCode) error.message = "Sorry internal server error occured";
 
     res.status(error.statusCode || 500).json({
         success: false,

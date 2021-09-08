@@ -3,7 +3,7 @@ const pool = require("../../../config/db/connectToDb");
 const { trimObject } = require("../../../helpers/trim");
 const checkProperties = require("../../../helpers/validateObject");
 const ErrorResponse = require("../../../utils/errors/errorResponse");
-const { approved, pending } = require("../../../config/config");
+const { approved, status } = require("../../../config/config");
 
 const getPrinterOuts = async (req, res, next) => {
   try {
@@ -12,11 +12,31 @@ const getPrinterOuts = async (req, res, next) => {
       return next(
         new ErrorResponse("You do not have permission to view print Outs", 400)
       );
-    const printOuts = await pool.query("select * from print_outs", 400);
+    const printOuts = await pool.query(
+      "select * from print_outs order by created_at desc"
+    );
+    const getPrintOutCosts = (printOuts) => {
+      return Promise.all(
+        printOuts.map(async (printOut) => {
+          const printerData = await pool.query(
+            "select printers.name,unit_cost from printer_types inner join printers on printers.printer_type = printer_types.id where printers.id=$1",
+            [printOut.printer]
+          );
+
+          return {
+            ...printOut,
+            printerName: printerData.rows[0].name,
+            total_cost:
+              parseInt(printerData.rows[0].unit_cost) * printOut.print_outs,
+            unit_cost: printerData.rows[0].unit_cost,
+          };
+        })
+      );
+    };
     res.status(200).json({
       success: true,
       message: "Successfully loaded data",
-      data: printOuts.rows,
+      data: await getPrintOutCosts(printOuts.rows),
     });
   } catch (error) {
     next(error);
@@ -37,7 +57,7 @@ const addPrintOut = async (req, res, next) => {
     const { print_outs, printer, created_at } = req.body;
 
     const checkPrinterInfo = await pool.query(
-      "select status from printer where id = $1",
+      "select status from printers where id = $1",
       [printer]
     );
     if (checkPrinterInfo.rowCount < 1)
@@ -47,21 +67,21 @@ const addPrintOut = async (req, res, next) => {
           404
         )
       );
-    else if (checkPrinterInfo.rows[0].status !== approved)
+    /* else if (parseInt(checkPrinterInfo.rows[0].status) !== status.approved)
       return next(
         new ErrorResponse(
           "The printer  you selected has not yet been approved",
           400
         )
-      );
+      ); */
     const insertPrinter = await pool.query(
-      "insert into print_outs (print_outs,printer,status,created_at,created_by) values($1,$2,$3,$4,$5,$6,$7) returning * ",
-      [parseInt(print_outs), printer, pending, user.id, created_at]
+      "insert into print_outs (print_outs,printer,status,created_at,created_by) values($1,$2,$3,$4,$5) returning * ",
+      [parseInt(print_outs), printer, status.pending, created_at, user.id]
     );
 
     res.status(201).json({
       success: true,
-      message: "Successfully added printer",
+      message: "Successfully added print out",
       data: insertPrinter.rows,
     });
   } catch (error) {
@@ -71,7 +91,7 @@ const addPrintOut = async (req, res, next) => {
 
 const editPrintOut = async (req, res, next) => {
   try {
-    const { printerOutId } = req.params;
+    const { printOutId } = req.params;
     sanitize(req.params);
     trimObject(req.body);
     const { permission, user } = req;
@@ -84,7 +104,7 @@ const editPrintOut = async (req, res, next) => {
     const { print_outs, printer, updated_at } = req.body;
 
     const checkPrinterInfo = await pool.query(
-      "select status from printer where id = $1",
+      "select status from printers where id = $1",
       [printer]
     );
     if (checkPrinterInfo.rowCount < 1)
@@ -94,7 +114,7 @@ const editPrintOut = async (req, res, next) => {
           404
         )
       );
-    else if (checkPrinterInfo.rows[0].status !== approved)
+    else if (parseInt(checkPrinterInfo.rows[0].status) !== status.approved)
       return next(
         new ErrorResponse(
           "The printer  you selected has not yet been approved",
@@ -102,15 +122,8 @@ const editPrintOut = async (req, res, next) => {
         )
       );
     const editPrintOut = await pool.query(
-      "update print_outs set print_outs=$1,printer=$2,status=$3,updated_by=$4,updated_at=$5 where id=$6",
-      [
-        parseInt(print_outs),
-        printer,
-        pending,
-        user.id,
-        updated_at,
-        printerOutId,
-      ]
+      "update print_outs set print_outs=$1,printer=$2,updated_by=$3,updated_at=$4 where id=$5 returning *",
+      [parseInt(print_outs), printer, user.id, updated_at, printOutId]
     );
     res.status(200).json({
       success: true,
@@ -124,7 +137,7 @@ const editPrintOut = async (req, res, next) => {
 
 const deletePrintOut = async (req, res, next) => {
   try {
-    const { printerOutId } = req.params;
+    const { printOutId } = req.params;
     const { permission } = req;
     if (!permission)
       return next(
@@ -133,7 +146,8 @@ const deletePrintOut = async (req, res, next) => {
           400
         )
       );
-    await pool.query("delete from print_outs where id =$1", [printerOutId]);
+    await pool.query("delete from print_outs where id=$1", [printOutId]);
+
     res.status(200).json({
       success: true,
       message: "Successfully deleted printer",
@@ -181,15 +195,15 @@ const approvePrintOut = async (req, res, next) => {
 
 const getPrintOutDetails = async (req, res, next) => {
   try {
-    const { printerId } = req.params;
+    const { printOutId } = req.params;
     const { permission } = req;
     if (!permission)
       return next(
         new ErrorResponse("You do not have permission to view printers", 400)
       );
     const printerOutsDetails = await pool.query(
-      "select * from printers where id=$1",
-      [printerId]
+      "select * from print_outs where id=$1",
+      [printOutId]
     );
     if (printerOutsDetails.rowCount < 1)
       return next(
@@ -199,8 +213,8 @@ const getPrintOutDetails = async (req, res, next) => {
         )
       );
     const printers = await pool.query(
-      "select * from printers where printer_type=$1",
-      [printerId]
+      "select printers.name,unit_cost from printer_types inner join printers on printers.printer_type = printer_types.id where printers.id=$1",
+      [printerOutsDetails.rows[0].printer]
     );
     const namesSql = "select first_name, other_names from users where id=$1";
     const creator = await pool.query(namesSql, [
@@ -217,7 +231,7 @@ const getPrintOutDetails = async (req, res, next) => {
       message: "Successfully loaded data",
       data: {
         ...printerOutsDetails.rows[0],
-        printers: printers.rows,
+        printerDetails: printers.rows[0],
         creator: creator.rows[0],
         approver: approver.rows[0],
         updator: updator.rows[0],

@@ -13,18 +13,26 @@ const {
   addPrinter,
   editPrinter,
   deletePrinter,
+  metaData,
 } = require("../../controllers/printers/printers.controller");
+const protect = require("../../middlewares/auth/protect");
 const checkHasPermission = require("../../middlewares/permissions/permissions");
 const printerTypesRouter = require("./printerTypes/printerTypes.routes");
 const printOutsRouter = require("./print_outs/printOuts.routes");
 
 const printerRouter = express.Router();
 
+printerRouter.use(protect);
+
+printerRouter.use("/printOuts", printOutsRouter);
+printerRouter.use("/types", printerTypesRouter);
+
 printerRouter.get(
   "/",
   checkHasPermission(can_view_printers).permission,
   getPrinters
 );
+printerRouter.get("/metadata", metaData);
 printerRouter.get(
   "/:printerId",
   checkHasPermission(can_view_printers).permission,
@@ -50,7 +58,5 @@ printerRouter.patch(
   checkHasPermission(can_approve_printers).permission,
   approvePrinter
 );
-printerRouter.use("/printOuts", printOutsRouter);
-printerRouter.use("/types", printerTypesRouter);
 
 module.exports = printerRouter;

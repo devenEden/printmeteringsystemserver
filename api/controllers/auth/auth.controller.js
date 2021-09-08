@@ -19,7 +19,7 @@ const resetPasswordHtml = require("../../utils/email/html/resetPassword.html");
 const registerUser = async (req, res, next) => {
   sanitize(req.body);
   trimObject(req.body);
-  //const { user } = req;
+  const { user } = req;
   const { email, first_name, other_names, role, created_at } = req.body;
   const emailVerified = false;
   const password = await hashPassword(email);
@@ -30,7 +30,7 @@ const registerUser = async (req, res, next) => {
     if (!validateEmail(email))
       return next(new ErrorResponse("Please enter a valid email", 400));
 
-    const confirmToken = confirmationToken(email);
+    /*     const confirmToken = confirmationToken(email); */
     const username =
       `${first_name}${other_names}`.toLowerCase() +
       Math.floor(Math.random() * 10000);
@@ -44,7 +44,7 @@ const registerUser = async (req, res, next) => {
         password,
         role,
         emailVerified,
-        "me",
+        user.id,
         created_at,
       ]
     );
@@ -54,7 +54,7 @@ const registerUser = async (req, res, next) => {
       text: "Confirm your account",
       html: emailConfirmationHtml(
         // eslint-disable-next-line no-undef
-        `${process.env.CLIENT_URL}/confirmAccount/${confirmToken}`,
+        `${process.env.CLIENT_URL}/login/`,
         {
           username,
           password: email,

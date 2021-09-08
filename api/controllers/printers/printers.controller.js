@@ -3,7 +3,7 @@ const sanitize = require("../../helpers/sanitizer");
 const { trimObject } = require("../../helpers/trim");
 const checkProperties = require("../../helpers/validateObject");
 const ErrorResponse = require("../../utils/errors/errorResponse");
-const { approved, pending, status } = require("../../config/config");
+const { status } = require("../../config/config");
 
 const getPrinters = async (req, res, next) => {
   try {
@@ -12,7 +12,7 @@ const getPrinters = async (req, res, next) => {
       return next(
         new ErrorResponse("You do not have permission to view printers", 400)
       );
-    const printers = await pool.query("select * from printers", 400);
+    const printers = await pool.query("select * from printers");
     res.status(200).json({
       success: true,
       message: "Successfully loaded data",
@@ -46,22 +46,22 @@ const addPrinter = async (req, res, next) => {
           404
         )
       );
-    else if (checkPrinterTypeInfo.rows[0].status !== approved)
+    /* else if (parseInt(checkPrinterTypeInfo.rows[0].status) !== status.approved)
       return next(
         new ErrorResponse(
           "The printer type you selected has not yet been approved",
           400
         )
-      );
+      ); */
     const insertPrinter = await pool.query(
       "insert into printers (name,ip,location,printer_type,status,created_at,created_by) values($1,$2,$3,$4,$5,$6,$7) returning * ",
-      [name, ip, location, printer_type, pending, user.id, created_at]
+      [name, ip, location, printer_type, status.pending, created_at, user.id]
     );
 
     res.status(201).json({
       success: true,
       message: "Successfully added printer",
-      data: insertPrinter.rows,
+      data: insertPrinter.rows[0],
     });
   } catch (error) {
     next(error);
@@ -92,7 +92,7 @@ const editPrinter = async (req, res, next) => {
           404
         )
       );
-    else if (checkPrinterTypeInfo.rows[0].status !== approved)
+    else if (parseInt(checkPrinterTypeInfo.rows[0].status) !== status.approved)
       return next(
         new ErrorResponse(
           "The printer type you selected has not yet been approved",
@@ -100,7 +100,7 @@ const editPrinter = async (req, res, next) => {
         )
       );
     const editPrinter = await pool.query(
-      "update printers set printer_type=$1,name=$2,ip=$3,location=$5,updated_by=$6,updated_at=$7 where id=$8",
+      "update printers set printer_type=$1,name=$2,ip=$3,location=$4,updated_by=$5,updated_at=$6 where id=$7 returning *",
       [printer_type, name, ip, location, user.id, updated_at, printerId]
     );
     res.status(200).json({
@@ -164,7 +164,7 @@ const approvePrinter = async (req, res, next) => {
         )
       );
     await pool.query(
-      "update printers set status=$1, approved_by=$2, approved_at=$3 where id = $1",
+      "update printers set status=$1, approved_by=$2, approved_at=$3 where id = $4",
       [status.approved, user.id, approvedAt, printerId]
     );
     res
@@ -218,11 +218,25 @@ const getPrinterDetails = async (req, res, next) => {
       data: {
         ...printerDetails.rows[0],
         printerTypeDetails: printerType.rows[0],
-        printers: printerOuts.rows,
+        printOuts: printerOuts.rows,
         creator: creator.rows[0],
         approver: approver.rows[0],
         updator: updator.rows[0],
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const metaData = async (req, res, next) => {
+  try {
+    const printers = await pool.query("select name,id from printers ");
+    const printerTypes = await pool.query("select name,id from printer_types ");
+    res.status(200).json({
+      success: true,
+      message: "Successfully loading data",
+      data: { printers: printers.rows, printerTypes: printerTypes.rows },
     });
   } catch (error) {
     next(error);
@@ -235,4 +249,5 @@ module.exports = {
   approvePrinter,
   deletePrinter,
   getPrinterDetails,
+  metaData,
 };

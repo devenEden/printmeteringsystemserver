@@ -16,6 +16,7 @@ const {
 } = require("../../../controllers/printers/printerTypes/printerTypes.controller");
 const checkHasPermission = require("../../../middlewares/permissions/permissions");
 const printerTypesRouter = express.Router();
+
 printerTypesRouter.get(
   "/",
   checkHasPermission(can_view_printer_types).permission,

@@ -2,7 +2,7 @@ const pool = require("../../../config/db/connectToDb");
 const sanitize = require("../../../helpers/sanitizer");
 const { trimObject } = require("../../../helpers/trim");
 const ErrorResponse = require("../../../utils/errors/errorResponse");
-const { pending, status } = require("../../../config/config");
+const { status } = require("../../../config/config");
 
 const getPrinterTypes = async (req, res, next) => {
   try {
@@ -14,7 +14,8 @@ const getPrinterTypes = async (req, res, next) => {
           400
         )
       );
-    const printerTypes = await pool.query("select * from printers");
+    const printerTypes = await pool.query("select * from printer_types");
+
     res.status(200).json({
       success: true,
       message: "Successfully loaded data",
@@ -40,14 +41,15 @@ const addPrinterTypes = async (req, res, next) => {
       );
     if (!name || !unit_cost)
       return next(new ErrorResponse("Please fill in all fields", 400));
+
     const addPrinterType = await pool.query(
       "insert into printer_types(name,unit_cost,status,created_by,created_at) values ($1,$2,$3,$4,$5) returning *",
-      [name, parseInt(unit_cost), pending, user.id, created_at]
+      [name, parseInt(unit_cost), status.pending, user.id, created_at]
     );
     res.status(201).json({
       success: true,
       message: "Successfully added printer type",
-      data: addPrinterType.rows,
+      data: addPrinterType.rows[0],
     });
   } catch (error) {
     next(error);
@@ -56,7 +58,7 @@ const addPrinterTypes = async (req, res, next) => {
 
 const editPrinterType = async (req, res, next) => {
   try {
-    const { user, permission } = req.params;
+    const { user, permission } = req;
     const { printerTypeId } = req.params;
     sanitize(req.body);
     trimObject(req.body);
@@ -64,18 +66,18 @@ const editPrinterType = async (req, res, next) => {
     if (!permission)
       return next(
         new ErrorResponse(
-          "You do not have permissions to add printer types",
+          "You do not have permissions to edit printer types",
           400
         )
       );
     if (!name || !unit_cost)
       return next(new ErrorResponse("Please fill in all fields", 400));
     const editPrinterType = await pool.query(
-      "update printer_types set name=$1,unit_cost=$2, updated_by=$3,updated_at=$4 where id = $5 rturning *",
+      "update printer_types set name=$1,unit_cost=$2, updated_by=$3,updated_at=$4 where id = $5 returning *",
       [name, parseInt(unit_cost), user.id, updated_at, printerTypeId]
     );
     res.status(200).json({
-      Success: true,
+      success: true,
       message: "Successfully edited printer type",
       data: editPrinterType.rows[0],
     });
@@ -130,7 +132,7 @@ const approvePrinterType = async (req, res, next) => {
         )
       );
     const checkRoleInfo = await pool.query(
-      "select status from printer_type where id=$1",
+      "select status from printer_types where id=$1",
       [printerTypeId]
     );
     if (checkRoleInfo.rows[0].status === status.approved)
@@ -141,7 +143,7 @@ const approvePrinterType = async (req, res, next) => {
         )
       );
     await pool.query(
-      "update printer_types set status=$1, approved_by=$2, approved_at=$3 where id = $1",
+      "update printer_types set status=$1, approved_by=$2, approved_at=$3 where id = $4",
       [status.approved, user.id, approvedAt, printerTypeId]
     );
     res

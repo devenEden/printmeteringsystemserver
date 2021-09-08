@@ -27,7 +27,7 @@ rolesRouter.put(
   editRoles
 );
 rolesRouter.patch(
-  "/:roleId",
+  "/approve/:roleId",
   checkHasPermission(can_approve_roles).permission,
   approveRole
 );

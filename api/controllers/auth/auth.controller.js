@@ -168,7 +168,6 @@ const loginUser = async (req, res, next) => {
   sanitize(req.body);
   trimObject(req.body);
   const { username, password } = req.body;
-
   try {
     if (!username || !password)
       return next(new ErrorResponse("Please fill in all fields", 400));

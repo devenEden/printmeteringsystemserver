@@ -1,9 +1,9 @@
-const pool = require("../../config/db/connectToDb");
-const sanitize = require("../../helpers/sanitizer");
-const { trimObject } = require("../../helpers/trim");
-const checkProperties = require("../../helpers/validateObject");
-const ErrorResponse = require("../../utils/errors/errorResponse");
-const { approved, pending } = require("../../config/config");
+const { sanitize } = require("sanitizer");
+const pool = require("../../../config/db/connectToDb");
+const { trimObject } = require("../../../helpers/trim");
+const checkProperties = require("../../../helpers/validateObject");
+const ErrorResponse = require("../../../utils/errors/errorResponse");
+const { approved, pending } = require("../../../config/config");
 
 const getPrinterOuts = async (req, res, next) => {
   try {

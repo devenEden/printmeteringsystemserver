@@ -23,7 +23,7 @@ printerTypesRouter.get(
 );
 printerTypesRouter.get(
   "/:printerTypeId",
-  checkHasPermission(can_view_printer_types),
+  checkHasPermission(can_view_printer_types).permission,
   getPrinterTypeDetails
 );
 printerTypesRouter.post(

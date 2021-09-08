@@ -42,7 +42,7 @@ printOutsRouter.delete(
   checkHasPermission(can_delete_print_outs).permission,
   deletePrintOut
 );
-printOutsRouter.approve(
+printOutsRouter.patch(
   "/approve/:printOutId",
   checkHasPermission(can_approve_print_outs).permission,
   approvePrintOut

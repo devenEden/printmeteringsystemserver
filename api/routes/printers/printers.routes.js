@@ -30,7 +30,11 @@ printerRouter.get(
   checkHasPermission(can_view_printers).permission,
   getPrinterDetails
 );
-printerRouter.post("/", checkHasPermission(can_add_printers), addPrinter);
+printerRouter.post(
+  "/",
+  checkHasPermission(can_add_printers).permission,
+  addPrinter
+);
 printerRouter.put(
   "/:printerId",
   checkHasPermission(can_edit_printers).permission,
@@ -47,6 +51,6 @@ printerRouter.patch(
   approvePrinter
 );
 printerRouter.use("/printOuts", printOutsRouter);
-printOutsRouter.use("/types", printerTypesRouter);
+printerRouter.use("/types", printerTypesRouter);
 
 module.exports = printerRouter;

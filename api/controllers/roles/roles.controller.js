@@ -16,6 +16,7 @@ const addRoles = async (req, res, next) => {
       return next(
         new ErrorResponse("You do not have permission to add roles", 400)
       );
+    console.log(created_at);
 
     const addRole = await pool.query(
       "insert into roles (name,status,created_by,created_at) values ($1,$2,$3,$4) returning * ",
@@ -29,7 +30,7 @@ const addRoles = async (req, res, next) => {
       ) {
         await pool.query(
           "insert into permissions(role,permission,created_by,created_at,updated_by) values ($1,$2,$3,$4,$5)",
-          [addRole.rows[0].id, req.body[key], user.id, created_at, "4"]
+          [addRole.rows[0].id, req.body[key], user.id, created_at, user.id]
         );
       }
     }
@@ -135,8 +136,14 @@ const getRoles = async (req, res, next) => {
 const deleteRoles = async (req, res, next) => {
   try {
     const { roleId } = req.params;
+    const { permission } = req;
+    if (!permission)
+      return next(
+        new ErrorResponse("You do not have permission to delete roles", 400)
+      );
+    console.log(roleId);
     await pool.query("delete from permissions where role=$1", [roleId]);
-    await pool.query("delete from roles where id=$2", [roleId]);
+    await pool.query("delete from roles where id=$1", [roleId]);
     res
       .status(200)
       .json({ success: true, message: "Successfully delete role" });
@@ -166,7 +173,7 @@ const approveRole = async (req, res, next) => {
         )
       );
     await pool.query(
-      "update roles set status=$1, approved_by=$2, approved_at=$3 where id = $1",
+      "update roles set status=$1, approved_by=$2, approved_at=$3 where id = $4",
       [status.approved, user.id, approvedAt, roleId]
     );
     res

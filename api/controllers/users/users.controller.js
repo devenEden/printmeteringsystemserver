@@ -13,16 +13,27 @@ const getUsers = async (req, res, next) => {
     const { permission } = req;
     if (!permission)
       return next(
-        new ErrorResponse("You Do not Have Permission to view Users")
+        new ErrorResponse("You Do not Have Permission to view Users", 400)
       );
 
     const users = await pool.query(
-      "select first_name, other_names,username,email from users "
+      "select first_name,other_names,username,email,role from users  "
     );
+    const getUserRoles = async (users) => {
+      return Promise.all(
+        users.map(async (user) => {
+          const role = await pool.query("select name from roles where id=$1", [
+            user.role,
+          ]);
+          user.roleName = role.rows[0].name;
+          return user;
+        })
+      );
+    };
     res.status(200).json({
       success: true,
       message: "Succesfully loaded data",
-      data: users.rows,
+      data: await getUserRoles(users.rows),
     });
   } catch (error) {
     next(error);
@@ -128,10 +139,18 @@ const updateUser = async (req, res, next) => {
     next(error);
   }
 };
-
+const metaData = async (req, res, next) => {
+  try {
+    const roles = await pool.query("select name,id from roles");
+    res.status(200).json({ success: true, data: { roles: roles.rows } });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getUsers,
   registerUser,
   deleteUsers,
   updateUser,
+  metaData,
 };

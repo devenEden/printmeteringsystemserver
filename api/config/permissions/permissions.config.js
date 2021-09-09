@@ -26,6 +26,11 @@ const permissions = {
   can_export_print_outs: "can_export_print_outs",
   can_delete_print_outs: "can_delete_print_outs",
   can_approve_print_outs: "can_approve_print_outs",
+  //users
+  can_view_users: "can_view_users",
+  can_add_users: "can_add_users",
+  can_delete_users: "can_delete_users",
+  can_edit_users: "can_edit_users",
 };
 
 module.exports = permissions;

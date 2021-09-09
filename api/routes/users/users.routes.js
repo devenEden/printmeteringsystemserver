@@ -5,17 +5,25 @@ const {
   can_add_users,
   can_delete_users,
   can_edit_users,
-} = require("../../config/config");
+} = require("../../config/permissions/permissions.config");
+const protect = require("../../middlewares/auth/protect");
 const {
   getUsers,
   registerUser,
   updateUser,
   deleteUsers,
+  metaData,
 } = require("../../controllers/users/users.controller");
 
 const usersRouter = express.Router();
+usersRouter.use(protect);
 
 usersRouter.get("/", checkHasPermission(can_view_users).permission, getUsers);
+usersRouter.get(
+  "/metaData",
+  checkHasPermission(can_add_users).permission,
+  metaData
+);
 usersRouter.post(
   "/",
   checkHasPermission(can_add_users).permission,

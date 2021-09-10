@@ -12,7 +12,7 @@ const protect = require("../../middlewares/auth/protect");
 
 const authRouter = express.Router();
 
-authRouter.get("/verifyToken", verifyToken);
+authRouter.get("/verifyToken", protect, verifyToken);
 //authRouter.get("/logout",  logoutUser);
 
 authRouter.post("/register", registerUser);

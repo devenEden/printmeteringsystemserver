@@ -35,6 +35,7 @@ usersRouter.put(
   updateUser
 );
 usersRouter.delete(
+  "/:userId",
   checkHasPermission(can_delete_users).permission,
   deleteUsers
 );

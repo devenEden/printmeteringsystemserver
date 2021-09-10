@@ -31,6 +31,7 @@ printOutsRouter.get(
 );
 printOutsRouter.post(
   "/import",
+  checkHasPermission(can_add_print_outs).permission,
   fileUploader.single("excelFile"),
   importPrintOuts
 );

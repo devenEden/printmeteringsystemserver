@@ -31,6 +31,8 @@ const permissions = {
   can_add_users: "can_add_users",
   can_delete_users: "can_delete_users",
   can_edit_users: "can_edit_users",
+  //billing
+  can_view_billing: "can_view_billing",
 };
 
 module.exports = permissions;

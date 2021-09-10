@@ -30,6 +30,7 @@ const permissions = {
   can_export_print_outs: "can_export_print_outs",
   can_delete_print_outs: "can_delete_print_outs",
   can_approve_print_outs: "can_approve_print_outs",
+  can_view_billing: "can_view_billing",
   //users:
   can_view_users: "can_view_users",
   can_add_users: "can_add_users",

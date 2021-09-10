@@ -13,8 +13,10 @@ const {
   editPrintOut,
   deletePrintOut,
   approvePrintOut,
+  importPrintOuts,
 } = require("../../../controllers/printers/printOuts/printOuts.controller");
 const checkHasPermission = require("../../../middlewares/permissions/permissions");
+const fileUploader = require("../../../middlewares/upload/file.upload");
 const printOutsRouter = express.Router();
 
 printOutsRouter.get(
@@ -26,6 +28,11 @@ printOutsRouter.get(
   "/:printOutId",
   checkHasPermission(can_view_print_outs).permission,
   getPrintOutDetails
+);
+printOutsRouter.post(
+  "/import",
+  fileUploader.single("excelFile"),
+  importPrintOuts
 );
 printOutsRouter.post(
   "/",

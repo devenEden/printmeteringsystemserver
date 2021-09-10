@@ -37,13 +37,13 @@ const protect = async (req, res, next) => {
     if (result.rowCount < 1)
       return next(new ErrorResponse("Invalid user credentials", 403));
 
-    if (!result.rows[0].account_confirmed)
-      return next(
-        new ErrorResponse(
-          "Sorry your account has not yet been confirmed please check your email for a confirmation message or request a new Confirmation request",
-          401
-        )
-      );
+    // if (!result.rows[0].account_confirmed)
+    //   return next(
+    //     new ErrorResponse(
+    //       "Sorry your account has not yet been confirmed please check your email for a confirmation message or request a new Confirmation request",
+    //       401
+    //     )
+    //   );
 
     // if (result.rows[0].account_status !== "active")
     //   return next(new ErrorResponse("Your account has been deactivated", 401));

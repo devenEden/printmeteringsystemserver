@@ -12,7 +12,8 @@ const getBilling = async (req, res, next) => {
     let currentDate = new Date().toISOString();
     currentDate = currentDate.split("T");
     //get the months from the oldest period up to current period
-    const billingCyclePeriod = dateRange(oldestDate[0], currentDate[0]);
+    const period = dateRange(oldestDate[0], currentDate[0]);
+    const billingCyclePeriod = period.reverse();
     //const printOuts = await pool.query("select * from print_outs");
 
     const generateBillingCycle = (months, printOuts, unit_cost) => {
@@ -40,11 +41,11 @@ const getBilling = async (req, res, next) => {
         const total_cost = unit_cost * totalForThisMonth;
         return {
           period: `${new Date(month).toLocaleString("default", {
-            month: "long",
+            month: "short",
           })} ${new Date(month).getFullYear()}`,
           opening: totalBeforeThisMonth,
           closing: totalForThisMonth + totalBeforeThisMonth,
-          consuption: totalForThisMonth,
+          prints: totalForThisMonth,
           total_cost,
         };
       });
@@ -56,7 +57,7 @@ const getBilling = async (req, res, next) => {
       return Promise.all(
         printers.map(async (printer) => {
           const printOuts = await pool.query(
-            "select * from print_outs where printer=$1",
+            "select * from print_outs where printer=$1 order by created_at desc",
             [printer.id]
           );
           const printerBillingCycle = generateBillingCycle(

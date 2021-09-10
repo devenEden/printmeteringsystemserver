@@ -180,13 +180,13 @@ const loginUser = async (req, res, next) => {
     if (result.rowCount < 1)
       return next(new ErrorResponse("Invalid login Credentials", 401));
 
-    if (!result.rows[0].account_confirmed)
-      return next(
-        new ErrorResponse(
-          "Please check your email for a confirmation message sent to you  to confirm your account. Or Request a new confirmation message ",
-          401
-        )
-      );
+    // if (!result.rows[0].account_confirmed)
+    //   return next(
+    //     new ErrorResponse(
+    //       "Please check your email for a confirmation message sent to you  to confirm your account. Or Request a new confirmation message ",
+    //       401
+    //     )
+    //   );
 
     const isPasswordValid = await comparePasswords(
       result.rows[0].password,
@@ -358,7 +358,12 @@ const resetPassword = async (req, res, next) => {
 
 const verifyToken = async (req, res, next) => {
   try {
-    res.status(200).json({ success: true });
+    const { user } = req;
+    const permissions = await pool.query(
+      "select * from permissions where role=$1",
+      [user.role]
+    );
+    res.status(200).json({ success: true, permissions: permissions.rows });
   } catch (error) {
     next(error);
   }

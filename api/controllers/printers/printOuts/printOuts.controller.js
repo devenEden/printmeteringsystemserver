@@ -247,6 +247,7 @@ const getPrintOutDetails = async (req, res, next) => {
 const importPrintOuts = async (req, res, next) => {
   try {
     const { file, permission, user } = req;
+    if (!file) return next(new ErrorResponse("Please select a file", 400));
     if (!permission)
       return next(
         new ErrorResponse("You do not have permission to add print outs", 400)
@@ -299,7 +300,11 @@ const importPrintOuts = async (req, res, next) => {
     fs.unlink(file.path, (err) => {
       if (err) console.error(err);
     });
-    res.status(200).json({ success: true, data: { file, errors } });
+    res.status(200).json({
+      success: true,
+      message: "Successfully Imported records",
+      data: { file, errors },
+    });
   } catch (error) {
     next(error);
   }

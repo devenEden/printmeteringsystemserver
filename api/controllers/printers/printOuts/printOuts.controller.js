@@ -4,6 +4,8 @@ const { trimObject } = require("../../../helpers/trim");
 const checkProperties = require("../../../helpers/validateObject");
 const ErrorResponse = require("../../../utils/errors/errorResponse");
 const { approved, status } = require("../../../config/config");
+const xlsx = require("xlsx");
+const fs = require("fs");
 
 const getPrinterOuts = async (req, res, next) => {
   try {
@@ -242,6 +244,67 @@ const getPrintOutDetails = async (req, res, next) => {
   }
 };
 
+const importPrintOuts = async (req, res, next) => {
+  try {
+    const { file, permission, user } = req;
+    if (!permission)
+      return next(
+        new ErrorResponse("You do not have permission to add print outs", 400)
+      );
+    const workBook = xlsx.readFile(file.path);
+    let errors = [];
+    let printOut = {};
+    const printOuts = [];
+    const workSheets = workBook.Sheets[workBook.SheetNames[0]];
+    for (const cell in workSheets) {
+      const cellAsString = cell.toString();
+      if (!cellAsString.startsWith("!")) {
+        if (cellAsString[0] === "A") printOut.printer = workSheets[cell].v;
+        if (cellAsString[0] === "B") printOut.printOuts = workSheets[cell].v;
+        if (cellAsString[0] === "C") {
+          printOut.createdAt = workSheets[cell].w;
+          if (!checkProperties(printOut))
+            errors.push(`${workSheets[cell].v} had  empty values`);
+          else printOuts.push(printOut);
+          printOut = {};
+        }
+      }
+    }
+
+    printOuts.forEach(async (printOut) => {
+      try {
+        const printerId = await pool.query(
+          "select id from printers where name=$1",
+          [printOut.printer]
+        );
+        if (printerId.rowCount < 1) {
+          errors.push(`Printer had an Invalid Printer Name`);
+          console.log(errors);
+        } else {
+          await pool.query(
+            "insert into print_outs (created_by,created_at,print_outs,printer,status) values($1,$2,$3,$4,$5)",
+            [
+              user.id,
+              printOut.createdAt,
+              printOut.printOuts,
+              parseInt(printerId.rows[0].id),
+              status.approved,
+            ]
+          );
+        }
+      } catch (error) {
+        next(error);
+      }
+    });
+    fs.unlink(file.path, (err) => {
+      if (err) console.error(err);
+    });
+    res.status(200).json({ success: true, data: { file, errors } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPrinterOuts,
   addPrintOut,
@@ -249,4 +312,5 @@ module.exports = {
   deletePrintOut,
   approvePrintOut,
   getPrintOutDetails,
+  importPrintOuts,
 };

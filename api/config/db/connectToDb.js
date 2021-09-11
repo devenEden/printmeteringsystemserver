@@ -1,4 +1,7 @@
 const { Pool } = require("pg");
+require("dotenv").config({
+  path: ".env",
+});
 /**
  * @description config for db connection
  */

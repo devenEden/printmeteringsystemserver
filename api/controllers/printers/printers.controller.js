@@ -92,13 +92,7 @@ const editPrinter = async (req, res, next) => {
           404
         )
       );
-    else if (parseInt(checkPrinterTypeInfo.rows[0].status) !== status.approved)
-      return next(
-        new ErrorResponse(
-          "The printer type you selected has not yet been approved",
-          400
-        )
-      );
+
     const editPrinter = await pool.query(
       "update printers set printer_type=$1,name=$2,ip=$3,location=$4,updated_by=$5,updated_at=$6 where id=$7 returning *",
       [printer_type, name, ip, location, user.id, updated_at, printerId]

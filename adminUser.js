@@ -33,7 +33,7 @@ const addAdminUser = async () => {
       [
         "Admin",
         "Admin",
-        "deshdeven1@gmail.com",
+        "deshdeven@gmail.com",
         role.rows[0].id,
         true,
         "admin",

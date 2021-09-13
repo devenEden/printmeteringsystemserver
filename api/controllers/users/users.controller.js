@@ -25,7 +25,7 @@ const getUsers = async (req, res, next) => {
           const role = await pool.query("select name from roles where id=$1", [
             user.role,
           ]);
-          user.roleName = role.rows[0].name;
+          user.roleName = role.rows[0]?.name;
           return user;
         })
       );

@@ -271,9 +271,10 @@ const importPrintOuts = async (req, res, next) => {
         }
       }
     }
-
+    console.log(printOuts);
     printOuts.forEach(async (printOut) => {
       try {
+        console.log(printOut.printer);
         const printerId = await pool.query(
           "select id from printers where name=$1",
           [printOut.printer]

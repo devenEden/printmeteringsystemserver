@@ -1,7 +1,6 @@
 const { sanitize } = require("sanitizer");
 const pool = require("../../config/db/connectToDb");
 const { dateRange } = require("../../helpers/dateRange");
-const { trimObject } = require("../../helpers/trim");
 const checkProperties = require("../../helpers/validateObject");
 const ErrorResponse = require("../../utils/errors/errorResponse");
 
@@ -86,7 +85,6 @@ const getBilling = async (req, res, next) => {
 const getBillingByPeriod = async (req, res, next) => {
   try {
     sanitize(req.body);
-    trimObject(req.body);
     if (!checkProperties(req.body))
       return next(new ErrorResponse("Please fill in all fields", 400));
 

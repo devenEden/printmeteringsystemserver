@@ -20,7 +20,7 @@ app.use(helmet());
 app.use("/api/v1", router);
 
 app.use(errorHandler);
-app.use("/api", routeNotFound);
+app.use(routeNotFound);
 
 // app.get("*", (req, res) => res.sendFile("/views/build/index.html",{root: }));
 app.listen(port, () => console.log(`Printer Tracker Running on Port ${port}`));
